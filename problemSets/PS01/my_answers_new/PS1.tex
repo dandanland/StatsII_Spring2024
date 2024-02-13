@@ -1,0 +1,161 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{graphicx,textcomp}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage[reqno]{amsmath}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{amssymb,enumerate}
+\usepackage[all]{xy}
+\usepackage{endnotes}
+\usepackage{lscape}
+\newtheorem{com}{Comment}
+\usepackage{float}
+\usepackage{hyperref}
+\newtheorem{lem} {Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem{thm}{Theorem}
+\newtheorem{defn}{Definition}
+\newtheorem{cor}{Corollary}
+\newtheorem{obs}{Observation}
+\usepackage[compact]{titlesec}
+\usepackage{dcolumn}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usepackage{multirow}
+\usepackage{xcolor}
+\newcolumntype{.}{D{.}{.}{-1}}
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+\definecolor{light-gray}{gray}{0.65}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+\lstset{style=mystyle}
+\newcommand{\Sref}[1]{Section~\ref{#1}}
+\newtheorem{hyp}{Hypothesis}
+
+\title{Problem Set 1}
+\date{Due: February 11, 2024}
+\author{Applied Stats II \\ Dan Zhang 23335541}
+
+
+\begin{document}
+	\maketitle
+	\section*{Instructions}
+	\begin{itemize}
+	\item Please show your work! You may lose points by simply writing in the answer. If the problem requires you to execute commands in \texttt{R}, please include the code you used to get your answers. Please also include the \texttt{.R} file that contains your code. If you are not sure if work needs to be shown for a particular problem, please ask.
+\item Your homework should be submitted electronically on GitHub in \texttt{.pdf} form.
+\item This problem set is due before 23:59 on Sunday February 11, 2024. No late assignments will be accepted.
+	\end{itemize}
+
+	\vspace{.25cm}
+\section*{Question 1} 
+\vspace{.25cm}
+\noindent The Kolmogorov-Smirnov test uses cumulative distribution statistics test the similarity of the empirical distribution of some observed data and a specified PDF, and serves as a goodness of fit test. The test statistic is created by:
+
+$$D = \max_{i=1:n} \Big\{ \frac{i}{n}  - F_{(i)}, F_{(i)} - \frac{i-1}{n} \Big\}$$
+
+\noindent where $F$ is the theoretical cumulative distribution of the distribution being tested and $F_{(i)}$ is the $i$th ordered value. Intuitively, the statistic takes the largest absolute difference between the two distribution functions across all $d$ values. Large values indicate dissimilarity and the rejection of the hypothesis that the empirical distribution matches the queried theoretical distribution. The p-value is calculated from the Kolmogorov-
+Smirnoff CDF:
+
+$$p(D \leq d)= \frac{\sqrt {2\pi}}{d} \sum _{k=1}^{\infty }e^{-(2k-1)^{2}\pi ^{2}/(8d^{2})}$$
+
+
+\noindent which generally requires approximation methods (see \href{https://core.ac.uk/download/pdf/25787785.pdf}{Marsaglia, Tsang, and Wang 2003}). This so-called non-parametric test (this label comes from the fact that the distribution of the test statistic does not depend on the distribution of the data being tested) performs poorly in small samples, but works well in a simulation environment. Write an \texttt{R} function that implements this test where the reference distribution is normal. Using \texttt{R} generate 1,000 Cauchy random variables (\texttt{rcauchy(1000, location = 0, scale = 1)}) and perform the test (remember, use the same seed, something like \texttt{set.seed(123)}, whenever you're generating your own data).\\
+	
+	
+\noindent As a hint, you can create the empirical distribution and theoretical CDF using this code:
+
+\begin{lstlisting}[language=R]
+	# create empirical distribution of observed data
+	ECDF <- ecdf(data)
+	empiricalCDF <- ECDF(data)
+	# generate test statistic
+	D <- max(abs(empiricalCDF - pnorm(data))) \end{lstlisting}
+
+\noindent Answer:\\
+\noindent The whole procedure will be including 4 parts: generate ECDF and reference CDF, calculate D statistic, calculate p value and use R function to check the results.\\\\First, generate Cauchy distributed data as the observated data, and then use ecdf function to create ECDF for observed data. Next, Use pnorm( ) to get the CDF of the normal distribution for observed data. As there is not specified, so I use the standard normal distribution. Set seed for reproducibility.
+
+		\lstinputlisting[language=R,firstline=39,lastline=52,]{PS1.R}
+		
+\noindent Calculate the D statistic using the formula provided. The result is D=0.1357281.
+		
+		\lstinputlisting[language=R,firstline=54,lastline=56,]{PS1.R}
+		
+\noindent Calculate p value. The formula provided above is based on infinite series. I truncate it after a reasonable number of terms. Here I choose 1000 terms for demonstration. This number might need to be increased for higher accuracy. The result is p-value=1.52187e-28.
+
+		\lstinputlisting[language=R,firstline=58,lastline=69,]{PS1.R}
+
+\noindent Finally, use the KS test in R to check the results.
+
+		\lstinputlisting[language=R,firstline=71,lastline=73,]{PS1.R}
+
+\noindent The KS test results are showed below:
+\begin{verbatim}
+		Asymptotic one-sample Kolmogorov-Smirnov test
+		
+		data:  data
+		D = 0.13573, p-value < 2.2e-16
+		alternative hypothesis: two-sided
+\end{verbatim}
+
+\noindent As we can see from the results that the p-value is significantly smaller than 0.05. So we can reject the null hypothesis that the distribution of the empirical Cauchy data matches normal distirbuted.
+\vspace{.5cm}
+
+\section*{Question 2}
+\noindent Estimate an OLS regression in \texttt{R} that uses the Newton-Raphson algorithm (specifically \texttt{BFGS}, which is a quasi-Newton method), and show that you get the equivalent results to using \texttt{lm}. Use the code below to create your data.
+\vspace{.5cm}
+
+\noindent Answer:\\
+\noindent The whole procedure will be 2 steps:\\
+		\indent Step 1: Use BFGS to estimate the OLS regression.\\
+		\indent Step 2: Use lm to get the equivalent results
+\noindent First, set seed and create data.
+
+		\lstinputlisting[language=R, firstline=79,lastline=83]{PS1.R} 
+
+\noindent Then estimate OLS model using BFGS algorithm. I use optim function in R and specify the BFGS algorithm to estimate model parameters. This includes towrite a loss function, so I define the residual sum of squares as the loss function, and then use optim function to minimize this loss function.
+
+		\lstinputlisting[language=R, firstline=85,lastline=103]{PS1.R} 
+		
+\noindent Next, use lm in R to estimate OLS regession and compare the results for two models.
+
+				\lstinputlisting[language=R, firstline=105,lastline=110]{PS1.R} 
+
+\noindent The results are as followed: 
+
+\begin{table}[!htbp] \centering   \caption{Estimate OLS regression using lm}   \label{} \begin{tabular}{@{\extracolsep{5pt}} cc} \\[-1.8ex]\hline \hline \\[-1.8ex] (Intercept) & x \\ \hline \\[-1.8ex] $0.139$ & $2.727$ \\ \hline \\[-1.8ex] \end{tabular} \end{table}
+
+\begin{table}[!htbp] \centering   \caption{Estimate OLS regression using BFGS algorithm}   \label{} \begin{tabular}{@{\extracolsep{5pt}}lc} \\[-1.8ex]\hline \hline \\[-1.8ex]  & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ \cline{2-2} \\[-1.8ex] & y \\ \hline \\[-1.8ex]  x & 2.727$^{***}$ \\   & (0.042) \\   & \\  Constant & 0.139 \\   & (0.253) \\   & \\ \hline \\[-1.8ex] Observations & 200 \\ R$^{2}$ & 0.956 \\ Adjusted R$^{2}$ & 0.956 \\ Residual Std. Error & 1.447 (df = 198) \\ F Statistic & 4,298.687$^{***}$ (df = 1; 198) \\ \hline \hline \\[-1.8ex] \textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ \end{tabular} \end{table} 
+
+\noindent As we can see from the results, the estimate results for OLS regression by using BFGS algorithm and lm are the same.
+
+
+		
+\end{document}
