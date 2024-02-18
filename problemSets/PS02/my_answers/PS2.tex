@@ -142,15 +142,15 @@ log(\frac{p}{1-p}) = \beta_0 + \beta_1*countries + \beta_2*sanctions
 \noindent Check Table 1, we can see that all the estimated coeffiecients are statistical significant with p-value $<$ 0.01. Therefore, we have strong evidence to reject the global null hypothesis, that is, at least 1 explanatory variable (countries or sanctions) in the model has a significant impact on the response variable (choice).\\\\
 \noindent Here are the coefficients interpretations:
 
-\noindent $Intercept (-0.273)$: When 20 countries support the policy and there is no sanction, the log odds of an individual supporting the policy is -0.273. It means that the individual support probability is approximately 43\% ($p$=$\frac{e^{-0.273}}{1+e^{-0.273}}$).
+\noindent \texttt{Intercept (-0.273)}: When 20 countries support the policy and there is no sanction, the log odds of an individual supporting the policy is -0.273. It means that the individual support probability is approximately 43\% ($p$=$\frac{e^{-0.273}}{1+e^{-0.273}}$).
 
-\noindent $Countries80 of 192 (0.336)$: Comparing 20 countries supporting the policy, when there are 80 countries participating, the log odds of supporting the policy increase by 0.336. This suggests that more state involvement increases the probability of policy support to approximately 58\% ($p$=$\frac{e^{0.336}}{1+e^{0.336}}$).
+\noindent \texttt{Countries80 of 192 (0.336)}: Comparing 20 countries supporting the policy, when there are 80 countries participating, the log odds of supporting the policy increase by 0.336. This suggests that more state involvement increases the probability of policy support to approximately 58\% ($p$=$\frac{e^{0.336}}{1+e^{0.336}}$).
 
-\noindent $Countries160 of 192 (0.648)$: Comparing 20 countries supporting the policy, when there are 160 countries participating, further significantly increases the log odds of supporting the policy by 0.648. The individual support probability is approximately 66\% ($p$=$\frac{e^{0.648}}{1+e^{0.648}}$).
+\noindent \texttt{Countries160 of 192 (0.648)}: Comparing 20 countries supporting the policy, when there are 160 countries participating, further significantly increases the log odds of supporting the policy by 0.648. The individual support probability is approximately 66\% ($p$=$\frac{e^{0.648}}{1+e^{0.648}}$).
 
-\noindent $Sanctions5 \% (0.192)$: Relative to no sanctions, a sanctions level of 5\% increases the log odds of supporting the policy by 0.192. The individual support probability is approximately 55\% ($p$=$\frac{e^{0.192}}{1+e^{0.192}}$).
+\noindent \texttt{Sanctions5 \% (0.192)}: Relative to no sanctions, a sanctions level of 5\% increases the log odds of supporting the policy by 0.192. The individual support probability is approximately 55\% ($p$=$\frac{e^{0.192}}{1+e^{0.192}}$).
 
-\noindent $Sanctions15\% (-0.133) and sanctions20\% (-0.304)$: Relative to no sanctions, higher levels of sanctions (15\% and 20\%) reduce the log odds of support for the policy. This suggests that if sanctions are too harsh, they may reduce public support for the policy.
+\noindent \texttt{Sanctions15\% (-0.133) and sanctions20\% (-0.304)}: Relative to no sanctions, higher levels of sanctions (15\% and 20\%) reduce the log odds of support for the policy. This suggests that if sanctions are too harsh, they may reduce public support for the policy.
 
 	\newpage
 	\item
