@@ -1,0 +1,205 @@
+---
+title: "Replication"
+author: "Dan Zhang"
+date: "2024-03-31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Remove all objects from the workspace
+rm(list = ls())
+# LOAD PACKAGES
+library(readr)   # readr_1.0.0: READ IN DATA WITH 'read_tsv()'
+library(dplyr)   # dplyr_0.5.0: HELPER FUNCTIONS, e.g., '%>%'
+library(texreg)  # texreg_1.36.7: PRINT SUMMARIES OF DATA WITH 'screenreg()'
+
+library(MASS) # For VIF
+library(car)  # Diagnostic plot for Logit model
+library(ResourceSelection) # For Hosmer-Lemeshow test
+# Set currency working directory
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Load data
+```{r}
+alexandria_data <- read_tsv("Alexandria_Data.tsv")
+```
+
+## Variables
+Explanatory variables
+- Control variables
+- z1ev: an individual’s weighted eigenvector network centrality
+- z1elite_avgprox: measure of elite proximity
+
+Outcome variables
+- turnout: binary variable indicating whether an individual voted
+
+## Identify control variables
+```{r}
+alexandria_controls_with_nl <- c(
+  "hhwealth",    # Household wealth (thousands of dollars)" , continous
+  "hhwealthlog", # ln(Household wealth) , continous
+  "midstatus",   # Mid-status occupation , categorical 0/1
+  "highstatus",  # High-status occupation, categorical 0/1
+  "owner",       # Owns home? , categorical 0/1
+  "age",         # Age (years) , continous
+  "agelog",      # ln(Age) , continous
+  "church",      # Is church member? , categorical 0/1
+  "usborn"       # Is U.S. born? , categorical 0/1
+) %>%
+  paste(collapse = " + ")
+```
+
+## Run turnout models (Table 1)--Original results
+```{r}
+# MODEL 1
+# Basline model:only personal attributes as explanatory variables.
+alexandria_turnout_1 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl)  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_1)
+
+# MODEL 2
+# Add z1ev: an individual’s weighted eigenvector network centrality
+alexandria_turnout_2 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl,
+                              "+ z1ev")  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_2)
+
+# MODEL 3
+# Add z1ev:an individual’s weighted eigenvector network centrality
+# and z1elite_avgprox: measure of elite proximity.
+alexandria_turnout_3 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl,
+                              "+ z1ev + z1elite_avgprox")  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_3)
+```
+
+```{r}
+# Perform sensitivity test, make sure adding network variables is significant
+# These relationships are powerful in confounding the clustering of interests and environmental impacts within the network.
+anova(alexandria_turnout_1, alexandria_turnout_3, test = "Chisq")
+```
+
+## Check assumptions of glm-logistic regression
+```{r}
+# Residual analysis and outlier detection
+par(mfrow = c(2, 2))
+plot(alexandria_turnout_3)
+```
+
+```{r}
+# Model goodness of fit test
+hoslem.test(alexandria_turnout_1$y, fitted(alexandria_turnout_1), g=10)
+hoslem.test(alexandria_turnout_2$y, fitted(alexandria_turnout_2), g=10)
+hoslem.test(alexandria_turnout_3$y, fitted(alexandria_turnout_3), g=10)
+
+# Check for multicollinearity
+vif(alexandria_turnout_3)
+```
+Good model fit and multicollinearity issue between age and agelog. The multicollinearity issue might because of the data distribution of age. 
+
+## Add ordered satus variable
+```{r}
+# Create 'statuslevel' based on 'midstatus' and 'highstatus'
+alexandria_data$statuslevel <- ifelse(alexandria_data$midstatus == 1, "middle status", 
+                           ifelse(alexandria_data$highstatus == 1, "high status", "non-status"))
+  
+# Convert 'statuslevel' to an ordered factor
+alexandria_data$statuslevel <- factor(alexandria_data$statuslevel, levels = c("non-status", "middle status", "high status"), ordered = TRUE)
+
+```
+## Add ordered satus variable
+```{r}
+new_controls <- c(
+  "hhwealth",    # Household wealth (thousands of dollars)" , continous
+  "hhwealthlog", # ln(Household wealth) , continous
+  "statuslevel", # Mid-status occupation , categorical 0/1
+  "owner",       # Owns home? , categorical 0/1
+  "age",         # Age (years) , continous
+  "agelog",      # ln(Age) , continous
+  "church",      # Is church member? , categorical 0/1
+  "usborn"       # Is U.S. born? , categorical 0/1
+) %>%
+  paste(collapse = " + ")
+
+# TABLE 1, MODEL 7
+alexandria_turnout_7 <- paste("turnout ~ ",
+                              new_controls)  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_7)
+
+
+# TABLE 2, MODEL 8
+alexandria_turnout_8 <- paste("turnout ~ ",
+                              new_controls,
+                              "+ z1ev")  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_8)
+
+# TABLE 2, MODEL 9
+alexandria_turnout_9 <- paste("turnout ~ ",
+                              new_controls,
+                              "+ z1ev + z1elite_avgprox")  %>%
+  formula()  %>%
+  glm(data = alexandria_data,
+      family = binomial(link = "logit"))
+summary(alexandria_turnout_9)
+```
+
+## Display results
+```{r}
+# # Table 1
+# list(
+#   alexandria_turnout_1,
+#   alexandria_turnout_2,
+#   alexandria_turnout_3,
+#   alexandria_turnout_4,
+#   alexandria_turnout_5,
+#   alexandria_turnout_6
+# )  %>%
+#   screenreg(digits = 3,
+#             stars = .05)
+
+# Table 2
+list(
+  alexandria_turnout_1,
+  alexandria_turnout_2,
+  alexandria_turnout_3,
+  alexandria_turnout_7,
+  alexandria_turnout_8,
+  alexandria_turnout_9
+)  %>%
+  screenreg(digits = 3,
+            stars = .05)
+```
+
+
+```{r}
+# Model goodness of fit test
+# hoslem.test(alexandria_turnout_4$y, fitted(alexandria_turnout_4), g=10)
+# hoslem.test(alexandria_turnout_5$y, fitted(alexandria_turnout_5), g=10)
+# hoslem.test(alexandria_turnout_6$y, fitted(alexandria_turnout_6), g=10)
+hoslem.test(alexandria_turnout_7$y, fitted(alexandria_turnout_7), g=10)
+hoslem.test(alexandria_turnout_8$y, fitted(alexandria_turnout_8), g=10)
+hoslem.test(alexandria_turnout_9$y, fitted(alexandria_turnout_9), g=10)
+```
+```{r}
+anova(alexandria_turnout_3, alexandria_turnout_9, test = "Chisq")
+```
+
+```{r}
+
