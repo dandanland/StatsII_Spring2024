@@ -98,6 +98,22 @@ plot(alexandria_turnout_3)
 ```
 
 ```{r}
+# Residual plot for logit model
+plot(residuals(alexandria_turnout_1, type = "deviance"), ylab = "Deviance Residuals")
+abline(h = 0, col = "red")
+title(main = "Deviance Residuals of model with only personal attributes")
+
+plot(residuals(alexandria_turnout_2, type = "deviance"), ylab = "Deviance Residuals")
+abline(h = 0, col = "red")
+title(main = "Deviance Residuals of model adding network centrality")
+
+plot(residuals(alexandria_turnout_3, type = "deviance"), ylab = "Deviance Residuals")
+abline(h = 0, col = "red")
+title(main = "Deviance Residuals of model adding network centrality and elite proximity")
+
+```
+
+```{r}
 # Model goodness of fit test
 hoslem.test(alexandria_turnout_1$y, fitted(alexandria_turnout_1), g=10)
 hoslem.test(alexandria_turnout_2$y, fitted(alexandria_turnout_2), g=10)
@@ -108,98 +124,59 @@ vif(alexandria_turnout_3)
 ```
 Good model fit and multicollinearity issue between age and agelog. The multicollinearity issue might because of the data distribution of age. 
 
-## Add ordered satus variable
+
+## Add an interaction term
 ```{r}
-# Create 'statuslevel' based on 'midstatus' and 'highstatus'
-alexandria_data$statuslevel <- ifelse(alexandria_data$midstatus == 1, "middle status", 
-                           ifelse(alexandria_data$highstatus == 1, "high status", "non-status"))
-  
-# Convert 'statuslevel' to an ordered factor
-alexandria_data$statuslevel <- factor(alexandria_data$statuslevel, levels = c("non-status", "middle status", "high status"), ordered = TRUE)
-
-```
-## Add ordered satus variable
-```{r}
-new_controls <- c(
-  "hhwealth",    # Household wealth (thousands of dollars)" , continous
-  "hhwealthlog", # ln(Household wealth) , continous
-  "statuslevel", # Mid-status occupation , categorical 0/1
-  "owner",       # Owns home? , categorical 0/1
-  "age",         # Age (years) , continous
-  "agelog",      # ln(Age) , continous
-  "church",      # Is church member? , categorical 0/1
-  "usborn"       # Is U.S. born? , categorical 0/1
-) %>%
-  paste(collapse = " + ")
-
-# TABLE 1, MODEL 7
-alexandria_turnout_7 <- paste("turnout ~ ",
-                              new_controls)  %>%
+# MODEL 4
+# Basline model:only personal attributes as explanatory variables.
+alexandria_turnout_4 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl,
+                              "+ hhwealthlog*owner")  %>%
   formula()  %>%
   glm(data = alexandria_data,
       family = binomial(link = "logit"))
-summary(alexandria_turnout_7)
+summary(alexandria_turnout_4)
 
-
-# TABLE 2, MODEL 8
-alexandria_turnout_8 <- paste("turnout ~ ",
-                              new_controls,
-                              "+ z1ev")  %>%
+# MODEL 5
+# Add z1ev: an individual’s weighted eigenvector network centrality
+alexandria_turnout_5 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl,
+                              "+ z1ev + + hhwealthlog*owner")  %>%
   formula()  %>%
   glm(data = alexandria_data,
       family = binomial(link = "logit"))
-summary(alexandria_turnout_8)
+summary(alexandria_turnout_5)
 
-# TABLE 2, MODEL 9
-alexandria_turnout_9 <- paste("turnout ~ ",
-                              new_controls,
-                              "+ z1ev + z1elite_avgprox")  %>%
+# MODEL 6
+# Add z1ev:an individual’s weighted eigenvector network centrality
+# and z1elite_avgprox: measure of elite proximity.
+alexandria_turnout_6 <- paste("turnout ~ ",
+                              alexandria_controls_with_nl,
+                              "+ z1ev + z1elite_avgprox + hhwealthlog*owner")  %>%
   formula()  %>%
   glm(data = alexandria_data,
       family = binomial(link = "logit"))
-summary(alexandria_turnout_9)
+summary(alexandria_turnout_6)
 ```
 
 ## Display results
 ```{r}
-# # Table 1
-# list(
-#   alexandria_turnout_1,
-#   alexandria_turnout_2,
-#   alexandria_turnout_3,
-#   alexandria_turnout_4,
-#   alexandria_turnout_5,
-#   alexandria_turnout_6
-# )  %>%
-#   screenreg(digits = 3,
-#             stars = .05)
-
 # Table 2
 list(
   alexandria_turnout_1,
   alexandria_turnout_2,
   alexandria_turnout_3,
-  alexandria_turnout_7,
-  alexandria_turnout_8,
-  alexandria_turnout_9
+  alexandria_turnout_4,
+  alexandria_turnout_5,
+  alexandria_turnout_6
 )  %>%
   screenreg(digits = 3,
             stars = .05)
 ```
-
-
+##Do the F-test
 ```{r}
-# Model goodness of fit test
-# hoslem.test(alexandria_turnout_4$y, fitted(alexandria_turnout_4), g=10)
-# hoslem.test(alexandria_turnout_5$y, fitted(alexandria_turnout_5), g=10)
-# hoslem.test(alexandria_turnout_6$y, fitted(alexandria_turnout_6), g=10)
-hoslem.test(alexandria_turnout_7$y, fitted(alexandria_turnout_7), g=10)
-hoslem.test(alexandria_turnout_8$y, fitted(alexandria_turnout_8), g=10)
-hoslem.test(alexandria_turnout_9$y, fitted(alexandria_turnout_9), g=10)
+# Perform an F-test to compare the two models
+anova(alexandria_turnout_3, alexandria_turnout_6, test = "Chisq")
 ```
-```{r}
-anova(alexandria_turnout_3, alexandria_turnout_9, test = "Chisq")
-```
-
-```{r}
+Model 6 has better performance. The F-test shows that it has lower residual deviance than Model 3 and have an statistical significant reduce of 9.5 deviance. Model 6 (including the interaction term hhwealthlog * owner) provides a statistically better fit than Model 3. The addition of the interaction term is meaningful and significantly improves the explanatory power of the model. This means that there is a significant interaction between hhwealthlog and owner, with a significant impact on the predictor variable turnout.
 
